@@ -1,88 +1,157 @@
 name: Cypress Tests - CI/CD
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  jobs:
+    # Job for Pull Requests: fast feedback — only Node 20.x
+    cypress-pr:
+      if: github.event_name == 'pull_request'
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          node-version: [20.x]
+      steps:
+        - name: Checkout código
+          uses: actions/checkout@v4
 
-jobs:
-  cypress-run:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [18.16.0, 20.x]
-    
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
+        - name: Setup Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v4
+          with:
+            node-version: ${{ matrix.node-version }}
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
+        - name: Cache NPM
+          uses: actions/cache@v4
+          with:
+            path: ~/.npm
+            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-node-
 
-      - name: Cache NPM
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+        - name: Cache Cypress
+          uses: actions/cache@v4
+          with:
+            path: ~/.cache/Cypress
+            key: ${{ runner.os }}-cypress-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-cypress-${{ matrix.node-version }}-
 
-      - name: Cache Cypress
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-cypress-${{ matrix.node-version }}-
+        - name: Instalar dependências
+          run: npm install
 
-      - name: Instalar dependências
-        run: npm install
+        - name: Executar testes Cypress
+          run: npm run cypress:run
+          continue-on-error: true
 
-      - name: Executar testes Cypress
-        run: npm run cypress:run
-        continue-on-error: true
+        - name: Upload relatórios como artifact
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: cypress-reports-node-${{ matrix.node-version }}
+            path: cypress/reports/mocha/
+            retention-days: 30
 
-      - name: Gerar relatório (se houver falhas)
-        if: always()
-        run: |
-          if [ -d "cypress/reports/mocha" ]; then
-            ls -la cypress/reports/mocha/
-          fi
+        - name: Upload screenshots (se houver falhas)
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+            name: cypress-screenshots-node-${{ matrix.node-version }}
+            path: cypress/screenshots/
+            retention-days: 7
 
-      - name: Upload relatórios como artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-reports-node-${{ matrix.node-version }}
-          path: cypress/reports/mocha/
-          retention-days: 30
+        - name: Upload vídeos (se houver)
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: cypress-videos-node-${{ matrix.node-version }}
+            path: cypress/videos/
+            retention-days: 7
 
-      - name: Upload screenshots (se houver falhas)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-screenshots-node-${{ matrix.node-version }}
-          path: cypress/screenshots/
-          retention-days: 7
+        - name: Exibir resultados dos testes
+          if: always()
+          run: |
+            if [ -f "cypress/reports/mocha/mochawesome.json" ]; then
+              echo "✅ Relatório gerado com sucesso!"
+              ls -lh cypress/reports/mocha/
+            else
+              echo "⚠️ Relatório não encontrado"
+            fi
 
-      - name: Upload vídeos (se houver)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-videos-node-${{ matrix.node-version }}
-          path: cypress/videos/
-          retention-days: 7
+    # Job for pushes to main: full matrix (compatibility)
+    cypress-main:
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          node-version: [18.16.0, 20.x]
+      steps:
+        - name: Checkout código
+          uses: actions/checkout@v4
 
-      - name: Exibir resultados dos testes
-        if: always()
-        run: |
-          if [ -f "cypress/reports/mocha/mochawesome.json" ]; then
-            echo "✅ Relatório gerado com sucesso!"
-            ls -lh cypress/reports/mocha/
-          else
-            echo "⚠️ Relatório não encontrado"
+        - name: Setup Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v4
+          with:
+            node-version: ${{ matrix.node-version }}
+
+        - name: Cache NPM
+          uses: actions/cache@v4
+          with:
+            path: ~/.npm
+            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-node-
+
+        - name: Cache Cypress
+          uses: actions/cache@v4
+          with:
+            path: ~/.cache/Cypress
+            key: ${{ runner.os }}-cypress-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-cypress-${{ matrix.node-version }}-
+
+        - name: Instalar dependências
+          run: npm install
+
+        - name: Executar testes Cypress
+          run: npm run cypress:run
+          continue-on-error: true
+
+        - name: Gerar relatório (se houver falhas)
+          if: always()
+          run: |
+            if [ -d "cypress/reports/mocha" ]; then
+              ls -la cypress/reports/mocha/
+            fi
+
+        - name: Upload relatórios como artifact
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: cypress-reports-node-${{ matrix.node-version }}
+            path: cypress/reports/mocha/
+            retention-days: 30
+
+        - name: Upload screenshots (se houver falhas)
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+            name: cypress-screenshots-node-${{ matrix.node-version }}
+            path: cypress/screenshots/
+            retention-days: 7
+
+        - name: Upload vídeos (se houver)
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: cypress-videos-node-${{ matrix.node-version }}
+            path: cypress/videos/
+            retention-days: 7
+
+        - name: Exibir resultados dos testes
+          if: always()
+          run: |
+            if [ -f "cypress/reports/mocha/mochawesome.json" ]; then
+              echo "✅ Relatório gerado com sucesso!"
+              ls -lh cypress/reports/mocha/
+            else
+              echo "⚠️ Relatório não encontrado"
+            fi
           fi
