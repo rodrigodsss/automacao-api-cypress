@@ -1,7 +1,12 @@
 name: Cypress Tests - CI/CD
 
 on:
-  jobs:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
     # Job for Pull Requests: fast feedback — only Node 20.x
     cypress-pr:
       if: github.event_name == 'pull_request'
@@ -154,4 +159,3 @@ on:
             else
               echo "⚠️ Relatório não encontrado"
             fi
-          fi
