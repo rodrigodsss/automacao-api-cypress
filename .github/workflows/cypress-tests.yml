@@ -61,44 +61,12 @@ jobs:
           path: cypress/videos/
           retention-days: 7
 
-      - name: Publicar resultados dos testes
+      - name: Exibir resultados dos testes
         if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            
-            try {
-              const reportPath = path.join('cypress/reports/mocha/mochawesome.json');
-              if (fs.existsSync(reportPath)) {
-                const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-                const { stats } = report;
-                
-                let summary = `## 📊 Resultados dos Testes (Node ${{ matrix.node-version }})\n\n`;
-                summary += `| Métrica | Valor |\n`;
-                summary += `|---------|-------|\n`;
-                summary += `| Total | ${stats.tests} |\n`;
-                summary += `| ✅ Passando | ${stats.passes} |\n`;
-                summary += `| ❌ Falhando | ${stats.failures} |\n`;
-                summary += `| ⏭️ Pendentes | ${stats.pending} |\n`;
-                summary += `| ⏱️ Duração | ${(stats.duration / 1000).toFixed(2)}s |\n\n`;
-                
-                const passRate = ((stats.passes / stats.tests) * 100).toFixed(2);
-                summary += `**Taxa de Sucesso:** ${passRate}%\n`;
-                
-                if (stats.failures === 0) {
-                  summary += '\n✅ Todos os testes passaram!';
-                } else {
-                  summary += `\n❌ ${stats.failures} teste(s) falharam.`;
-                }
-                
-                console.log(summary);
-              }
-            } catch (error) {
-              console.log('Não foi possível ler o relatório:', error.message);
-            }
-
-      - name: Falhar se houver testes falhando
-        if: failure()
-        run: exit 1
+        run: |
+          if [ -f "cypress/reports/mocha/mochawesome.json" ]; then
+            echo "✅ Relatório gerado com sucesso!"
+            ls -lh cypress/reports/mocha/
+          else
+            echo "⚠️ Relatório não encontrado"
+          fi
