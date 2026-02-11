@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Cypress
+cypress/reports/
+cypress/screenshots/
+cypress/videos/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local

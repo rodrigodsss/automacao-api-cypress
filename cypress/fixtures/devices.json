@@ -1,0 +1,36 @@
+{
+  "baseUrl": "https://api.restful-api.dev/objects",
+  "newDevice": {
+    "name": "Novo Dispositivo",
+    "data": {
+      "year": 2024,
+      "price": 1999.99,
+      "CPU model": "Intel i7",
+      "Hard disk size": "512GB SSD"
+    }
+  },
+  "deviceToUpdate": {
+    "name": "Dispositivo para Atualizar",
+    "data": {
+      "year": 2024,
+      "price": 1999.99
+    }
+  },
+  "updatedDevice": {
+    "name": "Dispositivo Atualizado",
+    "data": {
+      "year": 2025,
+      "price": 2499.99,
+      "CPU model": "Intel i9",
+      "Hard disk size": "1TB SSD"
+    }
+  },
+  "deviceToDelete": {
+    "name": "Dispositivo para Deletar",
+    "data": {
+      "year": 2024,
+      "price": 999.99
+    }
+  },
+  "validIds": ["3", "5", "10"]
+}

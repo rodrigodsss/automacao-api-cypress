@@ -1,0 +1,24 @@
+{
+  "name": "automacao-api-cypress",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:headless": "cypress run --headless"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cypress": "^15.9.0"
+  },
+  "devDependencies": {
+    "mochawesome": "^7.1.4",
+    "mochawesome-merge": "^5.1.1",
+    "mochawesome-report-generator": "^6.3.2"
+  }
+}
